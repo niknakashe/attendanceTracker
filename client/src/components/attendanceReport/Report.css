@@ -1,0 +1,25 @@
+.reportSectionMain .table-responsive th {
+  font-weight: bold;
+}
+.reportSectionMain .table-responsive .name {
+  text-transform: capitalize;
+  font-weight: bold;
+}
+.reportSectionMain .displayFlex {
+  display: flex;
+}
+.reportSectionMain .startDateInput,
+.reportSectionMain .endDateInput {
+  font-weight: bold;
+}
+.reportSectionMain .endDateFormGroup {
+  margin-left: 58px;
+}
+.reportSectionMain .filterBtn {
+  font-size: 12px;
+  background-color: #1a546f;
+  height: 38px;
+  width: 130px;
+  margin-top: 28px;
+  margin-left: 56px;
+}

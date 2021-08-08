@@ -1,0 +1,15 @@
+.attendanceRequestSection .taskListMain .table-responsive .fa {
+    font-size: 22px;
+}
+
+.attendanceRequestSection .taskListMain .table-responsive .fa-check {
+    color: green;
+}
+
+.attendanceRequestSection .taskListMain .table-responsive .fa-close {
+    color: red;
+}
+
+.attendanceRequestSection .taskListMain .table-responsive .closeBtn {
+    margin-left: 12px;
+}

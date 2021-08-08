@@ -1,0 +1,50 @@
+.heading h2 {
+    margin-right: auto;
+    margin-left: auto;
+    font-weight: bold;
+    margin-top: 20px;
+}
+.card {
+    padding: 10px;
+}
+.card .month {
+    text-align: center;
+    font-size: 16px;
+    font-weight: bold;
+}
+.card .row {
+    font-size: 14px;
+    margin-top: 10px;
+    margin-bottom: 10px;
+}
+
+.card .row .holidayName {
+    font-weight: bold;
+}
+
+.card .row .chApplyBtn {
+    height: 21px;
+    border-radius: 5px;
+    color: #fff;
+    width: 51px;
+    text-align: center;
+    font-size: 10px;
+    background: green;
+    font-weight: bold;
+}
+.applyLeaveModal .modal-title {
+    font-size: 18px;
+    font-weight: bold;
+}
+.applyLeaveModal .modal-body .form-group {
+    margin-top: 40px;
+}
+.applyLeaveModal .modal-footer {
+    font-size: 15px;
+}
+.applyLeaveModal .modal-footer .btn {
+    font-size: 12px;
+}
+.applyLeaveModal .modal-footer .btn-primary {
+    margin-left: 26px;
+}

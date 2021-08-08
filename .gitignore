@@ -1,0 +1,12 @@
+node_modules
+npm-debug.log
+yarn-error.log
+client/components
+client/node_modules
+client/config
+client/node_modules/config/config.js
+/src/config/config.js
+/src/config/db.js
+.idea
+.DS_Store
+#client/images/backend

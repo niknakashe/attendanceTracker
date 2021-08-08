@@ -1,0 +1,46 @@
+.table-responsive>.fixed-column {
+    position: absolute;
+    display: inline-block;
+    width: auto;
+    border-right: 1px solid #ddd;
+    background-color: #fff;
+}
+.table-responsive {
+    font-size: 14px;
+}
+.table-responsive thead th {
+    font-size: 14px!important;
+    padding: 8px!important;
+}
+.table-responsive td {
+    padding: 8px!important;
+}
+.taskListMain .titleText {
+    font-size: 16px;
+    margin-top: 10px;
+    margin-bottom: 10px;
+    margin-right: auto;
+    margin-left: auto;
+    font-weight: bold;
+}
+.taskListMain h3 {
+    font-size: 18px;
+    text-align: center;
+}
+.taskListMain .taskForDay, .additionalNote {
+    white-space: pre-line;
+}
+@media(min-width:768px) {
+    .taskListMain .table-responsive>.fixed-column {
+        display: none;
+    }
+    .taskListMain .table-responsive {
+        font-size: 16px!important;
+    }
+    .taskListMain .table-responsive thead th {
+        font-size: 16px!important;
+    }
+    .taskListMain .titleText {
+        font-size: 18px;
+    }
+}
