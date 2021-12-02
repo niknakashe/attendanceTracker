@@ -45,6 +45,8 @@ UserDetails.prototype.insertUserStatus = async function (data, callback) {
     taskForDay: data.taskForDay,
     additionalNote:
       typeof data.additionalNote !== "undefined" ? data.additionalNote : null,
+    missedReason:
+      typeof data.missedReason !== "undefined" ? data.missedReason : null,
   };
 
   if (
@@ -132,13 +134,47 @@ UserDetails.prototype.getUserAttendance = async function (data, callback) {
     }
   }
 
-  console.log("query", query);
   sql.query(query, function (err, rows, fileds) {
     if (err) {
       callback({ status: false, msg: err });
     } else {
       callback({ status: true, data: rows });
     }
+  });
+};
+
+UserDetails.prototype.getNotPresentUser = async function (data) {
+  let query =
+    `SELECT
+                    *
+                FROM
+                    userdetails ud
+                WHERE
+                    ud.id NOT IN(
+                    SELECT
+                        ua.userId
+                    FROM
+                        userattendance ua
+                    WHERE
+                        ua.attendanceDate = '` +
+    data.attendanceDate +
+    `'
+                ) AND ud.ifActive = 1 AND ud.userType = 1`;  
+
+  return new Promise((resolve, reject) => {
+    sql.query(query, function (err, rows, fileds) {
+      if (err) {
+        reject({
+          status: false,
+          msg: err,
+        });
+      } else {
+        resolve({
+          status: true,
+          data: rows,
+        });
+      }
+    });
   });
 };
 
@@ -164,7 +200,8 @@ UserDetails.prototype.getUserAttendanceCalender = async function (
                     s.shortName,
                     s.statusColor,
                     s.ifActive,
-                    hc.holidayName
+                    hc.holidayName,
+                    op.holidayName as optionalHolidayName
                     FROM
                         (
                         SELECT
@@ -337,6 +374,8 @@ UserDetails.prototype.getUserAttendanceCalender = async function (
                         s.id = ua.status
                     LEFT JOIN holidayCalender hc ON
                         hc.date = v.date AND hc.type = 1
+                    LEFT JOIN holidayCalender op ON
+                        op.date = v.date AND op.type = 2
                     WHERE
                         1`;
 

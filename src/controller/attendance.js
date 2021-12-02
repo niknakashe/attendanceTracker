@@ -63,11 +63,25 @@ Attendance.prototype.sendAttendanceMailToCustomer = async function (
   let params = {
     attendanceDate: dateFormat(new Date(), config.API_DATE_FORMAT),
   };
+  let userNotPresent = await userModel.getNotPresentUser(params);  
+  // console.log('userNotPresent', userNotPresent);
   userModel.getUserAttendance(params, function (response) {
-    console.log("response", response);
     if (response.status && response.data.length > 0) {
       let htmlRows = ``;
       let additionalNote = "NA";
+      let notPresentHtmlRows = ``;
+      if (userNotPresent.status && userNotPresent.data.length > 0) {
+        console.log('in', userNotPresent);
+        userNotPresent.data.map((value, index) => {
+          notPresentHtmlRows =
+            notPresentHtmlRows +
+            `<tr>
+          <td style="padding: 8px" align="center">` +
+            value.name +
+            `</td>
+                </tr>`;
+        });
+      }
       response.data.map(function (value, index) {
         additionalNote =
           value.additionalNote != "" && value.additionalNote != null
@@ -134,7 +148,27 @@ Attendance.prototype.sendAttendanceMailToCustomer = async function (
                             <tr>
                               <td height="10" style="font-size:10px; line-height:10px;">&nbsp;</td>
                             </tr>
-                          </table>`,
+                          </table><h2 align="center" style="margin: 0 auto 0 auto; width: 900px;">People who have not marked their today's attendance</h2>
+                          <table width="600" cellpadding="0" cellspacing="0" border="0" class="wrapper" bgcolor="#FFFFFF" align="center" style="margin: 0 auto 0 auto;">
+            <tr>
+                                          <td height="10" style="font-size:10px; line-height:10px;">&nbsp;</td>
+                                        </tr>
+                                        <tr>
+                                          <td align="center" valign="top">
+                            <table width="600" cellpadding="0" cellspacing="0" border="1" class="container">                          
+                          <tr>
+                                      <th style="padding: 10px" align="center" valign="top">
+                                        Name
+                                      </th>                          
+                                      </tr>` +
+                notPresentHtmlRows +
+                `</table>
+                </td>
+                              </tr>
+                              <tr>
+                                <td style="padding: 10px" align="center">&nbsp;<b>Note</b>: Those who have been absent can regularize their attendance from portal before today 7PM</td>
+                              </tr>							
+                            </table>`,
             },
             Text: {
               Charset: "UTF-8",
@@ -148,7 +182,8 @@ Attendance.prototype.sendAttendanceMailToCustomer = async function (
         },
         Source: "admin@greatmanagerinstitute.com",
       };
-      
+      // console.log('parama', params.Message.Body.Html);      
+
       var sendPromise = new AWS.SES({ apiVersion: "2010-12-01" })
         .sendEmail(params)
         .promise();

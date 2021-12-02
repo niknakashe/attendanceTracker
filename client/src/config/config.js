@@ -11,5 +11,6 @@ module.exports = {
     'MOMENT_FULL_MONTH': 'MMMM',
     'MOMENT_HOLIDAY_FORMAT': 'ddd MMM D',
     'EARNED_LEAVE': 5,
-    'OPTIONAL_HOLIDAY': 7
+    'OPTIONAL_HOLIDAY': 7,
+    'WORK_WITHOUT_PAY': 6
 }

@@ -8,6 +8,7 @@ import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 var config = require("../../config/config");
 var jwt = require("jsonwebtoken");
+var queryString = require("query-string");
 
 let momentUiDateFormat = "Do MMMM YYYY";
 let startYear = 2014;
@@ -18,6 +19,7 @@ let API_DATE_FORMAT = "YYYY-MM-DD";
 let DATE_START_FORMAT = "YYYY-MM-DD 00:00:00";
 let DATE_END_FORMAT = "YYYY-MM-DD 23:59:59";
 let blockTime = "11:00am";
+let lastTime = "07:00pm";
 
 class Dashboard extends React.Component {
   constructor(props) {
@@ -211,6 +213,7 @@ class CardDetails extends React.Component {
     let cellDate = moment(this.props.cellDetails.calenderDate).format(
       API_DATE_FORMAT
     );
+
     let eligible = false;
     if (
       moment().isBefore(moment(blockTime, "h:mma")) &&
@@ -271,23 +274,34 @@ class CardDetails extends React.Component {
             )}
           </>
         )}
-        {eligible ? (
+        {typeof this.props.cellDetails.markStatus !== "undefined" &&
+        this.props.cellDetails.markStatus == 0 &&
+        todayDate == cellDate &&
+        moment().isBefore(moment(blockTime, "h:mma")) ? (
           <div className="sendRequest">
             <button
               className="btn"
-              onClick={this.props.changeStatusModal.bind(this, true, false)}
+              onClick={this.props.changeStatusModal.bind(this, true)}
             >
               Mark Attendance
             </button>
           </div>
-        ) : typeof this.props.cellDetails.markStatus !== "undefined" &&
-          this.props.cellDetails.markStatus == 0 ? (
+        ) : (
+          ""
+        )}
+        {typeof this.props.cellDetails.markStatus !== "undefined" &&
+        this.props.cellDetails.markStatus == 0 &&
+        todayDate == cellDate &&
+        moment().isBetween(
+          moment(blockTime, "h:mma"),
+          moment(lastTime, "h:mma")
+        ) ? (
           <div className="sendRequest">
             <button
               className="btn"
               onClick={this.props.changeStatusModal.bind(this, true, true)}
             >
-              Send Request to Admin
+              Regularise Attendance
             </button>
           </div>
         ) : (
@@ -771,8 +785,13 @@ class MarkStatusModal extends React.Component {
         taskForDay: "",
         status: 0,
         additionalNote: "",
+        missedReason: "",
       },
       btnDisable: false,
+      leaveBalance: {
+        plBalance: 0,
+        chBalance: 0,
+      },
     };
 
     this.handleClose = this.handleClose.bind(this);
@@ -782,6 +801,7 @@ class MarkStatusModal extends React.Component {
     this.onSubmit = this.onSubmit.bind(this);
     this.submitDetailsAdmin = this.submitDetailsAdmin.bind(this);
     this.resetData = this.resetData.bind(this);
+    this.getUserLeaves = this.getUserLeaves.bind(this);
   }
 
   componentWillReceiveProps(nextProps) {
@@ -795,11 +815,40 @@ class MarkStatusModal extends React.Component {
     });
   }
 
+  getUserLeaves() {
+    let that = this;
+    Axios.get(
+      config.API_BASE +
+        "/leave/getUserLeaves?" +
+        queryString.stringify({
+          userId: this.props.userDetails.id,
+        })
+    )
+      .then(function (response) {
+        let res = response.data;
+        if (
+          res.status &&
+          typeof res.data !== "undefined" &&
+          res.data.length > 0
+        ) {
+          let leaveObject = res.data[0];
+
+          that.setState({ leaveBalance: leaveObject });
+        }
+      })
+      .catch(function (error) {
+        console.log("error", error);
+      });
+  }
+
   isValid() {
     let isValid = true;
 
     let details = this.state.details;
     let mendatoryFields = ["userId", "attendanceDate", "taskForDay", "status"];
+    if (this.props.requestAdmin) {
+      mendatoryFields.push("missedReason");
+    }
     mendatoryFields.map(function (value, index) {
       if (
         typeof details[value] === "undefined" ||
@@ -813,17 +862,18 @@ class MarkStatusModal extends React.Component {
     });
     if (typeof details.status === "undefined" || details.status == 0) {
       return false;
-    }
+    }    
 
     return isValid;
   }
 
   onSubmit() {
-    if (this.props.requestAdmin) {
-      this.submitDetailsAdmin();
-    } else {
-      this.submitDetails();
-    }
+    // if (this.props.requestAdmin) {
+    //   this.submitDetailsAdmin();
+    // } else {
+    //   this.submitDetails();
+    // }
+    this.submitDetails();
   }
 
   submitDetailsAdmin() {
@@ -882,6 +932,20 @@ class MarkStatusModal extends React.Component {
       toast.error("Mendatory fields required");
       return false;
     }
+    switch(this.state.details.status) {
+      case '5':
+        if(this.state.leaveBalance.plBalance <= 0) {
+          toast.error("You don't have enough Paid Leaves");
+          return false;
+        }
+        break;
+      case '7':
+        if(this.state.leaveBalance.chBalance <= 0) {
+          toast.error("You don't have enough Optional Leaves");
+          return false;
+        }
+        break;
+    }
     let that = this;
     this.setState({ btnDisable: true }, function () {
       Axios.post(config.API_BASE + "/user/insertUserStatus", this.state.details)
@@ -919,12 +983,20 @@ class MarkStatusModal extends React.Component {
     let details = this.state.details;
     details[state] = evt.target.value;
 
+    if (state == "status" && (evt.target.value == 5 || evt.target.value == 7)) {
+      this.getUserLeaves();
+    }
+
     this.setState({ details: details });
   }
 
   render() {
     let details = this.state.details;
     let that = this;
+    let isOptionalHoliday =
+      typeof this.props.cellDetails.optionalHolidayName !== "undefined" &&
+      this.props.cellDetails.optionalHolidayName != null &&
+      this.props.cellDetails.optionalHolidayName != "";
     return (
       <>
         <Modal
@@ -966,8 +1038,9 @@ class MarkStatusModal extends React.Component {
                     {this.props.status.map(function (value, index) {
                       if (
                         that.props.requestAdmin &&
-                        (value.id == config.EARNED_LEAVE ||
-                          value.id == config.OPTIONAL_HOLIDAY)
+                        ((!isOptionalHoliday &&
+                          value.id == config.OPTIONAL_HOLIDAY) ||
+                          value.id == config.WORK_WITHOUT_PAY)
                       ) {
                         return;
                       }
@@ -980,6 +1053,22 @@ class MarkStatusModal extends React.Component {
                   </Form.Control>
                 </Col>
               </Form.Group>
+              {details.status == 5 || details.status == 7 ? (
+                <Form.Group as={Row} controlId="displayLeaves">
+                  <Form.Label column sm="2">
+                    Leave Balance
+                  </Form.Label>
+                  <Col sm="10">
+                    <Form.Control
+                      type="text"
+                      readOnly
+                      value={this.state.leaveBalance.plBalance}
+                    />
+                  </Col>
+                </Form.Group>
+              ) : (
+                ""
+              )}
               <Form.Group as={Row} controlId="taskfortheday">
                 <Form.Label column sm="2">
                   Task For The Day <span className="compulsory">*</span>
@@ -993,6 +1082,24 @@ class MarkStatusModal extends React.Component {
                   />
                 </Col>
               </Form.Group>
+              {this.props.requestAdmin ? (
+                <Form.Group as={Row} controlId="missedReason">
+                  <Form.Label column sm="2">
+                    Why I missed marking my attendance?{" "}
+                    <span className="compulsory">*</span>
+                  </Form.Label>
+                  <Col sm="10">
+                    <Form.Control
+                      as="textarea"
+                      rows="3"
+                      value={details.missedReason}
+                      onChange={this.handleChange.bind(this, "missedReason")}
+                    />
+                  </Col>
+                </Form.Group>
+              ) : (
+                ""
+              )}
               <Form.Group as={Row} controlId="additionalNotes">
                 <Form.Label column sm="2">
                   Additional Notes
@@ -1026,23 +1133,5 @@ class MarkStatusModal extends React.Component {
     );
   }
 }
-
-// function MarkStatusModal(props) {
-//     const [show, setShow] = useState(props.openModal);
-
-//     const handleClose = () => {
-//         setShow(false);
-//         props.changeStatusModal(false);
-//     };
-//     const handleShow = () => setShow(true);
-
-//     useEffect(() => {
-//         setShow(props.openModal);
-//     }, [props.openModal])
-
-//     return (
-
-//     );
-// }
 
 export default Dashboard;
