@@ -74,7 +74,7 @@ class Header extends React.Component {
                 <div className="container main-menu">
                     <div className="row align-items-center d-flex">
                         <div id="logo">
-                            <a href="index.html"><img src="/images/gmi_logo.jpg" alt="" title="" /></a>
+                            <a href="index.html"><img src="/images/gmi_logo.png" alt="" title="" /></a>
                         </div>
                         <nav id="nav-menu-container">
                             <ul className="nav-menu">

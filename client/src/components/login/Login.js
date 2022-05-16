@@ -116,7 +116,7 @@ class Login extends React.Component {
                     <div className="wrap-login100 p-l-85 p-r-85 p-t-55 p-b-55">
                         <form className="login100-form validate-form flex-sb flex-w">
                             <span className="gmiLogo">
-                                <img src="/images/gmi_logo.jpg" />
+                                <img src="/images/gmi_logo.png" />
                             </span>
                             <span className="login100-form-title p-b-32">
                                 Attendance Tracker Login
